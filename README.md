@@ -2,6 +2,8 @@
 
 QWhisper is a Qt6-based desktop application that provides real-time speech-to-text functionality using OpenAI's Whisper model. It offers a user-friendly graphical interface for continuous audio transcription with support for multiple output formats and advanced audio processing features.
 
+![qwhisper](images/qwhisper.png)
+
 ## Features
 
 - Real-time speech-to-text transcription using Whisper models
