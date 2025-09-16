@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="256" height="256" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="128" cy="128" r="120" fill="#2E3440" stroke="#4C566A" stroke-width="4"/>
+  
+  <!-- Microphone base -->
+  <rect x="108" y="60" width="40" height="80" rx="20" fill="#88C0D0" stroke="#5E81AC" stroke-width="2"/>
+  
+  <!-- Microphone grill lines -->
+  <line x1="118" y1="75" x2="138" y2="75" stroke="#2E3440" stroke-width="1.5" opacity="0.3"/>
+  <line x1="118" y1="85" x2="138" y2="85" stroke="#2E3440" stroke-width="1.5" opacity="0.3"/>
+  <line x1="118" y1="95" x2="138" y2="95" stroke="#2E3440" stroke-width="1.5" opacity="0.3"/>
+  <line x1="118" y1="105" x2="138" y2="105" stroke="#2E3440" stroke-width="1.5" opacity="0.3"/>
+  <line x1="118" y1="115" x2="138" y2="115" stroke="#2E3440" stroke-width="1.5" opacity="0.3"/>
+  <line x1="118" y1="125" x2="138" y2="125" stroke="#2E3440" stroke-width="1.5" opacity="0.3"/>
+  
+  <!-- Microphone stand -->
+  <path d="M 88 140 Q 88 160 108 160 L 148 160 Q 168 160 168 140" 
+        fill="none" stroke="#88C0D0" stroke-width="3" stroke-linecap="round"/>
+  
+  <!-- Stand base -->
+  <rect x="123" y="160" width="10" height="30" fill="#88C0D0"/>
+  <rect x="108" y="190" width="40" height="8" rx="2" fill="#88C0D0"/>
+  
+  <!-- Sound waves (left) -->
+  <path d="M 70 90 Q 60 100 60 110 Q 60 120 70 130" 
+        fill="none" stroke="#A3BE8C" stroke-width="2" stroke-linecap="round" opacity="0.7"/>
+  <path d="M 55 80 Q 40 100 40 120 Q 40 140 55 160" 
+        fill="none" stroke="#A3BE8C" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+  <path d="M 40 70 Q 20 100 20 130 Q 20 160 40 190" 
+        fill="none" stroke="#A3BE8C" stroke-width="2" stroke-linecap="round" opacity="0.3"/>
+  
+  <!-- Sound waves (right) -->
+  <path d="M 186 90 Q 196 100 196 110 Q 196 120 186 130" 
+        fill="none" stroke="#A3BE8C" stroke-width="2" stroke-linecap="round" opacity="0.7"/>
+  <path d="M 201 80 Q 216 100 216 120 Q 216 140 201 160" 
+        fill="none" stroke="#A3BE8C" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+  <path d="M 216 70 Q 236 100 236 130 Q 236 160 216 190" 
+        fill="none" stroke="#A3BE8C" stroke-width="2" stroke-linecap="round" opacity="0.3"/>
+  
+  <!-- Q letter overlay (subtle branding) -->
+  <text x="128" y="138" font-family="Arial, sans-serif" font-size="48" font-weight="bold" 
+        fill="#ECEFF4" opacity="0.15" text-anchor="middle">Q</text>
+</svg>

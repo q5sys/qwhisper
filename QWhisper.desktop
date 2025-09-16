@@ -1,0 +1,19 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=QWhisper
+GenericName=Speech Recognition
+Comment=Real-time speech-to-text transcription using OpenAI Whisper
+Exec=/usr/local/bin/qwhisper
+Icon=/usr/local/share/icons/hicolor/256x256/apps/qwhisper.png
+Terminal=false
+Categories=AudioVideo;Audio;Qt;Utility;Accessibility;
+Keywords=whisper;speech;recognition;transcription;voice;audio;dictation;
+StartupNotify=true
+MimeType=audio/wav;audio/mp3;audio/ogg;audio/flac;
+Actions=Configure;
+
+[Desktop Action Configure]
+Name=Open Settings
+Exec=/usr/local/bin/qwhisper --settings
+Icon=/usr/local/share/icons/hicolor/256x256/apps/qwhisper.png
