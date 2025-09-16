@@ -4,6 +4,10 @@ QWhisper is a Qt6-based desktop application that provides real-time speech-to-te
 
 ![qwhisper](https://github.com/q5sys/qwhisper/blob/master/images/qwhipser.png)
 
+## Guarantee
+
+This software has a 100% `Works on My Box` _Seal of Approval_.  YMMV.
+
 ## Features
 
 - Real-time speech-to-text transcription using Whisper models
