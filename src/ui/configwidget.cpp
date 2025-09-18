@@ -36,6 +36,9 @@ ConfigWidget::ConfigWidget(QWidget *parent)
     m_config.includeTimestamps = false;
     m_config.computeDeviceType = 0;  // Default to CPU
     m_config.computeDeviceId = -1;
+    m_config.gainBoostDb = 0.0;      // Default: no gain boost
+    m_config.autoGainEnabled = false; // Default: manual gain control
+    m_config.autoGainTarget = 0.1;   // Default: 10% target level
     m_config.outputToWindow = true;
     m_config.outputToFile = false;
     m_config.outputToClipboard = false;
@@ -154,6 +157,47 @@ void ConfigWidget::setupUi()
     filterLayout->addWidget(highCutLabel, 2, 0);
     filterLayout->addWidget(m_highCutSpin, 2, 1);
     
+    // Audio Gain Control Group
+    m_gainGroup = new QGroupBox(tr("Audio Gain Control"), this);
+    QGridLayout *gainLayout = new QGridLayout(m_gainGroup);
+    
+    QLabel *gainBoostLabel = new QLabel(tr("Gain Boost (dB):"), this);
+    m_gainBoostSpin = new QDoubleSpinBox(this);
+    m_gainBoostSpin->setRange(-20.0, 40.0);
+    m_gainBoostSpin->setSingleStep(1.0);
+    m_gainBoostSpin->setValue(0.0);
+    m_gainBoostSpin->setToolTip(tr("Manual gain boost in decibels. Positive values increase volume, negative values decrease it."));
+    
+    m_gainBoostLabel = new QLabel(tr("0.0 dB"), this);
+    m_gainBoostLabel->setMinimumWidth(60);
+    m_gainBoostLabel->setStyleSheet("QLabel { color: gray; }");
+    
+    m_autoGainCheck = new QCheckBox(tr("Enable Automatic Gain Control"), this);
+    m_autoGainCheck->setChecked(false);
+    m_autoGainCheck->setToolTip(tr("Automatically adjust gain to maintain consistent audio levels"));
+    
+    QLabel *autoGainTargetLabel = new QLabel(tr("AGC Target Level:"), this);
+    m_autoGainTargetSpin = new QDoubleSpinBox(this);
+    m_autoGainTargetSpin->setRange(0.01, 0.9);
+    m_autoGainTargetSpin->setSingleStep(0.01);
+    m_autoGainTargetSpin->setValue(0.1);
+    m_autoGainTargetSpin->setDecimals(2);
+    m_autoGainTargetSpin->setEnabled(false);
+    m_autoGainTargetSpin->setToolTip(tr("Target audio level for automatic gain control (0.01 to 0.9)"));
+    
+    m_autoGainTargetLabel = new QLabel(tr("10%"), this);
+    m_autoGainTargetLabel->setMinimumWidth(40);
+    m_autoGainTargetLabel->setStyleSheet("QLabel { color: gray; }");
+    m_autoGainTargetLabel->setEnabled(false);
+    
+    gainLayout->addWidget(gainBoostLabel, 0, 0);
+    gainLayout->addWidget(m_gainBoostSpin, 0, 1);
+    gainLayout->addWidget(m_gainBoostLabel, 0, 2);
+    gainLayout->addWidget(m_autoGainCheck, 1, 0, 1, 3);
+    gainLayout->addWidget(autoGainTargetLabel, 2, 0);
+    gainLayout->addWidget(m_autoGainTargetSpin, 2, 1);
+    gainLayout->addWidget(m_autoGainTargetLabel, 2, 2);
+    
     // Output Options Group
     m_outputGroup = new QGroupBox(tr("Output Options"), this);
     QVBoxLayout *outputLayout = new QVBoxLayout(m_outputGroup);
@@ -203,6 +247,7 @@ void ConfigWidget::setupUi()
     mainLayout->addWidget(m_audioGroup);
     mainLayout->addWidget(m_vadGroup);
     mainLayout->addWidget(m_filterGroup);
+    mainLayout->addWidget(m_gainGroup);
     mainLayout->addWidget(m_outputGroup);
     mainLayout->addStretch();
 }
@@ -244,10 +289,24 @@ void ConfigWidget::connectSignals()
     connect(m_refreshDevicesButton, &QPushButton::clicked,
             this, &ConfigWidget::refreshAudioDevices);
     
+    // Gain control connections
+    connect(m_gainBoostSpin, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
+            this, &ConfigWidget::onGainBoostChanged);
+    connect(m_autoGainCheck, &QCheckBox::toggled,
+            this, &ConfigWidget::onAutoGainToggled);
+    connect(m_autoGainTargetSpin, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
+            this, &ConfigWidget::onAutoGainTargetChanged);
+    
     // Enable/disable filter controls based on checkbox
     connect(m_bandpassCheck, &QCheckBox::toggled, [this](bool checked) {
         m_lowCutSpin->setEnabled(checked);
         m_highCutSpin->setEnabled(checked);
+    });
+    
+    // Enable/disable AGC target controls based on checkbox
+    connect(m_autoGainCheck, &QCheckBox::toggled, [this](bool checked) {
+        m_autoGainTargetSpin->setEnabled(checked);
+        m_autoGainTargetLabel->setEnabled(checked);
     });
     
     // Enable/disable file browse button based on checkbox
@@ -335,6 +394,11 @@ void ConfigWidget::setConfiguration(const AudioConfiguration &config)
     m_bandpassCheck->setChecked(config.useBandpass);
     m_lowCutSpin->setValue(config.lowCutFreq);
     m_highCutSpin->setValue(config.highCutFreq);
+    m_gainBoostSpin->setValue(config.gainBoostDb);
+    m_gainBoostLabel->setText(QString("%1 dB").arg(config.gainBoostDb, 0, 'f', 1));
+    m_autoGainCheck->setChecked(config.autoGainEnabled);
+    m_autoGainTargetSpin->setValue(config.autoGainTarget);
+    m_autoGainTargetLabel->setText(QString("%1%").arg(static_cast<int>(config.autoGainTarget * 100)));
     m_timestampsCheck->setChecked(config.includeTimestamps);
     m_outputWindowCheck->setChecked(true);  // Always show in transcript window
     m_outputTypeToWindowCheck->setChecked(config.outputToWindow);  // This is for typing to active window
@@ -361,6 +425,9 @@ void ConfigWidget::saveSettings()
     audioConfig["useBandpass"] = m_config.useBandpass;
     audioConfig["lowCutFreq"] = m_config.lowCutFreq;
     audioConfig["highCutFreq"] = m_config.highCutFreq;
+    audioConfig["gainBoostDb"] = m_config.gainBoostDb;
+    audioConfig["autoGainEnabled"] = m_config.autoGainEnabled;
+    audioConfig["autoGainTarget"] = m_config.autoGainTarget;
     audioConfig["includeTimestamps"] = m_config.includeTimestamps;
     audioConfig["outputToWindow"] = m_config.outputToWindow;
     audioConfig["outputToFile"] = m_config.outputToFile;
@@ -387,6 +454,9 @@ void ConfigWidget::loadSettings()
         m_config.useBandpass = audioConfig.value("useBandpass").toBool(true);
         m_config.lowCutFreq = audioConfig.value("lowCutFreq").toDouble(80.0);
         m_config.highCutFreq = audioConfig.value("highCutFreq").toDouble(6000.0);
+        m_config.gainBoostDb = audioConfig.value("gainBoostDb").toDouble(0.0);
+        m_config.autoGainEnabled = audioConfig.value("autoGainEnabled").toBool(false);
+        m_config.autoGainTarget = audioConfig.value("autoGainTarget").toDouble(0.1);
         // Handle legacy settings
         if (audioConfig.contains("useTimestamps")) {
             m_config.includeTimestamps = audioConfig.value("useTimestamps").toBool(false);
@@ -487,6 +557,26 @@ void ConfigWidget::onLowCutChanged(double value)
 void ConfigWidget::onHighCutChanged(double value)
 {
     m_config.highCutFreq = value;
+    emitConfigurationChanged();
+}
+
+void ConfigWidget::onGainBoostChanged(double value)
+{
+    m_config.gainBoostDb = value;
+    m_gainBoostLabel->setText(QString("%1 dB").arg(value, 0, 'f', 1));
+    emitConfigurationChanged();
+}
+
+void ConfigWidget::onAutoGainToggled(bool checked)
+{
+    m_config.autoGainEnabled = checked;
+    emitConfigurationChanged();
+}
+
+void ConfigWidget::onAutoGainTargetChanged(double value)
+{
+    m_config.autoGainTarget = value;
+    m_autoGainTargetLabel->setText(QString("%1%").arg(static_cast<int>(value * 100)));
     emitConfigurationChanged();
 }
 

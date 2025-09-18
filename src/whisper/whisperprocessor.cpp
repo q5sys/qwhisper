@@ -68,12 +68,16 @@ void WhisperProcessor::processAudio(const QByteArray &audioData)
     // Debug output every second
     static qint64 lastDebugTime = 0;
     if (currentTime - lastDebugTime > 1000) {
-        qDebug() << "Audio stats - Avg amplitude:" << avgAmplitude 
-                 << "Max amplitude:" << maxAmplitude 
-                 << "Threshold:" << m_pickupThreshold
-                 << "Has sound:" << hasSound
-                 << "Recording:" << m_isRecording
-                 << "Buffer size:" << m_audioBuffer.size();
+        // Only log audio stats occasionally to avoid spam
+        static int logCounter = 0;
+        if (++logCounter % 50 == 0) { // Log every 50th call (about once per 10 seconds)
+            qDebug() << "Audio stats - Avg amplitude:" << avgAmplitude
+                     << "Max amplitude:" << maxAmplitude
+                     << "Threshold:" << m_pickupThreshold
+                     << "Has sound:" << hasSound
+                     << "Recording:" << m_isRecording
+                     << "Buffer size:" << m_audioBuffer.size();
+        }
         lastDebugTime = currentTime;
     }
     

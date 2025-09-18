@@ -205,9 +205,14 @@ void MainWindow::connectSignals()
     connect(m_configWidget, &ConfigWidget::configurationChanged,
             m_audioCapture.get(), &AudioCapture::updateConfiguration);
     
-    // Connect config widget timestamp setting to transcript widget
+    // Connect config widget to audio processor (for gain settings)
     connect(m_configWidget, &ConfigWidget::configurationChanged,
             [this](const AudioConfiguration &config) {
+                m_audioProcessor->setGainBoost(config.gainBoostDb);
+                m_audioProcessor->setAutoGainEnabled(config.autoGainEnabled);
+                m_audioProcessor->setAutoGainTarget(config.autoGainTarget);
+                m_audioProcessor->setFilterEnabled(config.useBandpass);
+                m_audioProcessor->setFilterFrequencies(config.lowCutFreq, config.highCutFreq);
                 m_transcriptWidget->setShowTimestamps(config.includeTimestamps);
             });
     
@@ -215,17 +220,31 @@ void MainWindow::connectSignals()
     connect(m_configWidget, &ConfigWidget::modelChanged,
             m_whisperProcessor.get(), &WhisperProcessor::loadModel);
     
-    // Connect audio capture to audio processor (with filtering)
+    // Connect audio capture to audio processor (with filtering and gain)
     connect(m_audioCapture.get(), &AudioCapture::audioDataReady,
             m_audioProcessor.get(), &AudioProcessor::processAudioData);
     
-    // Connect audio processor to whisper processor (filtered audio)
+    // Connect audio processor to whisper processor (processed audio)
     connect(m_audioProcessor.get(), &AudioProcessor::processedAudio,
             m_whisperProcessor.get(), &WhisperProcessor::processAudio);
     
-    // Connect audio capture to audio monitor (for level display)
-    connect(m_audioCapture.get(), &AudioCapture::audioLevelChanged,
-            m_audioMonitor, &AudioMonitor::updateLevel);
+    // Connect audio processor to audio monitor (for level display with gain applied)
+    connect(m_audioProcessor.get(), &AudioProcessor::processedAudio,
+            [this](const QByteArray &data) {
+                // Calculate level from processed audio data
+                const qint16 *samples = reinterpret_cast<const qint16*>(data.constData());
+                const int sampleCount = data.size() / sizeof(qint16);
+                
+                if (sampleCount > 0) {
+                    qint64 sum = 0;
+                    for (int i = 0; i < sampleCount; ++i) {
+                        sum += qAbs(samples[i]);
+                    }
+                    float average = static_cast<float>(sum) / sampleCount;
+                    float normalized = average / 32768.0f; // Normalize to 0-1 range
+                    m_audioMonitor->updateLevel(qBound(0.0f, normalized, 1.0f));
+                }
+            });
     
     // Connect whisper processor to transcript widget
     connect(m_whisperProcessor.get(), &WhisperProcessor::transcriptionReady,
@@ -271,10 +290,13 @@ void MainWindow::onStartRecording()
         auto config = m_configWidget->getConfiguration();
         m_audioCapture->updateConfiguration(config);
         
-        // Configure audio processor with sample rate and filter settings
+        // Configure audio processor with current settings
         m_audioProcessor->setSampleRate(16000); // Default sample rate for Whisper
-        m_audioProcessor->setFilterEnabled(true);
-        m_audioProcessor->setFilterFrequencies(300.0, 3400.0); // Speech frequency range
+        m_audioProcessor->setGainBoost(config.gainBoostDb);
+        m_audioProcessor->setAutoGainEnabled(config.autoGainEnabled);
+        m_audioProcessor->setAutoGainTarget(config.autoGainTarget);
+        m_audioProcessor->setFilterEnabled(config.useBandpass);
+        m_audioProcessor->setFilterFrequencies(config.lowCutFreq, config.highCutFreq);
         
         m_whisperProcessor->updateConfiguration(config);
         m_outputManager->updateConfiguration(config);

@@ -32,6 +32,11 @@ struct AudioConfiguration {
     int computeDeviceType;  // 0 = CPU, 1 = CUDA
     int computeDeviceId;    // -1 for CPU, 0+ for GPU index
     
+    // Audio gain options
+    double gainBoostDb;     // Manual gain boost in dB
+    bool autoGainEnabled;   // Enable automatic gain control
+    double autoGainTarget;  // Target level for AGC (0.0 to 1.0)
+    
     // Output options
     bool outputToWindow;
     bool outputToFile;
@@ -73,6 +78,9 @@ private slots:
     void onBandpassToggled(bool checked);
     void onLowCutChanged(double value);
     void onHighCutChanged(double value);
+    void onGainBoostChanged(double value);
+    void onAutoGainToggled(bool checked);
+    void onAutoGainTargetChanged(double value);
     void onTimestampsToggled(bool checked);
     void onOutputOptionsChanged();
     void onBrowseOutputFile();
@@ -112,6 +120,14 @@ private:
     QCheckBox *m_bandpassCheck;
     QDoubleSpinBox *m_lowCutSpin;
     QDoubleSpinBox *m_highCutSpin;
+    
+    // Audio gain control
+    QGroupBox *m_gainGroup;
+    QDoubleSpinBox *m_gainBoostSpin;
+    QLabel *m_gainBoostLabel;
+    QCheckBox *m_autoGainCheck;
+    QDoubleSpinBox *m_autoGainTargetSpin;
+    QLabel *m_autoGainTargetLabel;
     
     // Output options
     QGroupBox *m_outputGroup;
